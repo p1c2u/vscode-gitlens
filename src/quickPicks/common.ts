@@ -4,8 +4,9 @@ import { CancellationTokenSource, commands, Disposable, QuickPickItem, QuickPick
 import { Commands, openEditor } from '../commands';
 import { ExtensionKey, IAdvancedConfig } from '../configuration';
 import { GlyphChars } from '../constants';
-import { GitCommit, GitCommitType, GitLogCommit, GitStashCommit } from '../gitService';
+import { GitCommit, GitCommitType, GitLog, GitLogCommit, GitStashCommit } from '../gitService';
 import { Keyboard, KeyboardScope, KeyMapping, Keys } from '../keyboard';
+import { getResultsExplorer } from '../views/resultsExplorer';
 // import { Logger } from '../logger';
 
 export function getQuickPickIgnoreFocusOut() {
@@ -187,5 +188,25 @@ export class CommitQuickPickItem implements QuickPickItem {
             this.description = `${Strings.pad('$(git-commit)', 1, 1)} ${commit.shortSha}`;
             this.detail = `${GlyphChars.Space} ${commit.author}, ${commit.fromNow()}${(commit.type === GitCommitType.Branch) ? ` ${Strings.pad(GlyphChars.Dot, 1, 1)} ${(commit as GitLogCommit).getDiffStatus()}` : ''}`;
         }
+    }
+}
+
+export class ShowCommitsInResultsQuickPickItem extends CommandQuickPickItem {
+
+    constructor(
+        public readonly search: string,
+        public readonly results: GitLog,
+        public readonly queryFn: (maxCount: number | undefined) => Promise<GitLog | undefined>,
+        item: QuickPickItem
+    ) {
+        super(item, undefined, undefined);
+    }
+
+    async execute(options: TextDocumentShowOptions = { preserveFocus: false, preview: false }): Promise<{} | undefined> {
+        const explorer = getResultsExplorer();
+        if (explorer === undefined) return undefined;
+
+        explorer.showCommitSearchResults(this.search, this.results, this.queryFn);
+        return undefined;
     }
 }

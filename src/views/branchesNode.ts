@@ -2,8 +2,7 @@
 import { Iterables } from '../system';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { BranchHistoryNode } from './branchHistoryNode';
-import { ExplorerNode, ResourceType } from './explorerNode';
-import { GitExplorer } from './gitExplorer';
+import { Explorer, ExplorerNode, ResourceType } from './explorerNode';
 import { GitUri, Repository } from '../gitService';
 
 export class BranchesNode extends ExplorerNode {
@@ -11,7 +10,7 @@ export class BranchesNode extends ExplorerNode {
         constructor(
             uri: GitUri,
             private readonly repo: Repository,
-            private readonly explorer: GitExplorer
+            private readonly explorer: Explorer
         ) {
             super(uri);
         }

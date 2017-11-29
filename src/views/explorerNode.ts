@@ -1,8 +1,21 @@
 'use strict';
-import { Command, Disposable, ExtensionContext, TreeItem, TreeItemCollapsibleState } from 'vscode';
+import { Command, Disposable, TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { GlyphChars } from '../constants';
+import { RefreshNodeCommandArgs } from './explorerCommands';
 import { GitUri } from '../gitService';
-import { RefreshNodeCommandArgs } from './gitExplorer';
+import { GitExplorer } from './gitExplorer';
+import { ResultsExplorer } from './resultsExplorer';
+
+export enum RefreshReason {
+    ActiveEditorChanged = 'active-editor-changed',
+    AutoRefreshChanged = 'auto-refresh-changed',
+    Command = 'command',
+    ConfigurationChanged = 'configuration',
+    NodeCommand = 'node-command',
+    RepoChanged = 'repo-changed',
+    ViewChanged = 'view-changed',
+    VisibleEditorsChanged = 'visible-editors-changed'
+}
 
 export enum ResourceType {
     Branches = 'gitlens:branches',
@@ -15,6 +28,7 @@ export enum ResourceType {
     Commit = 'gitlens:commit',
     CommitOnCurrentBranch = 'gitlens:commit:current',
     CommitFile = 'gitlens:commit-file',
+    Commits = 'gitlens:commits',
     FileHistory = 'gitlens:file-history',
     Folder = 'gitlens:folder',
     History = 'gitlens:history',
@@ -24,6 +38,7 @@ export enum ResourceType {
     Remotes = 'gitlens:remotes',
     Repositories = 'gitlens:repositories',
     Repository = 'gitlens:repository',
+    Results = 'gitlens:results',
     Stash = 'gitlens:stash',
     StashFile = 'gitlens:stash-file',
     Stashes = 'gitlens:stashes',
@@ -34,9 +49,14 @@ export enum ResourceType {
     StatusUpstream = 'gitlens:status-upstream'
 }
 
+export type Explorer = GitExplorer | ResultsExplorer;
+
 // let id = 0;
 
 export abstract class ExplorerNode extends Disposable {
+
+    readonly supportsPaging: boolean = false;
+    maxCount: number | undefined;
 
     protected children: ExplorerNode[] | undefined;
     protected disposable: Disposable | undefined;
@@ -65,7 +85,9 @@ export abstract class ExplorerNode extends Disposable {
         return undefined;
     }
 
-    resetChildren() {
+    refresh(): void { }
+
+    resetChildren(): void {
         if (this.children !== undefined) {
             this.children.forEach(c => c.dispose());
             this.children = undefined;
@@ -99,7 +121,7 @@ export class PagerNode extends ExplorerNode {
     constructor(
         private readonly message: string,
         private readonly node: ExplorerNode,
-        protected readonly context: ExtensionContext
+        protected readonly explorer: Explorer
     ) {
         super(new GitUri());
     }
@@ -113,8 +135,8 @@ export class PagerNode extends ExplorerNode {
         item.contextValue = ResourceType.Pager;
         item.command = this.getCommand();
         item.iconPath = {
-            dark: this.context.asAbsolutePath('images/dark/icon-unfold.svg'),
-            light: this.context.asAbsolutePath('images/light/icon-unfold.svg')
+            dark: this.explorer.context.asAbsolutePath('images/dark/icon-unfold.svg'),
+            light: this.explorer.context.asAbsolutePath('images/light/icon-unfold.svg')
         };
         return item;
     }
@@ -122,7 +144,7 @@ export class PagerNode extends ExplorerNode {
     getCommand(): Command | undefined {
         return {
             title: 'Refresh',
-            command: 'gitlens.gitExplorer.refreshNode',
+            command: this.explorer.getQualifiedCommand('refreshNode'),
             arguments: [this.node, this.args]
         } as Command;
     }
@@ -135,8 +157,8 @@ export class ShowAllNode extends PagerNode {
     constructor(
         message: string,
         node: ExplorerNode,
-        context: ExtensionContext
+        explorer: Explorer
     ) {
-        super(`${message} ${GlyphChars.Space}${GlyphChars.Dash}${GlyphChars.Space} this may take a while`, node, context);
+        super(`${message} ${GlyphChars.Space}${GlyphChars.Dash}${GlyphChars.Space} this may take a while`, node, explorer);
     }
 }

@@ -26,19 +26,21 @@ export enum BuiltInCommands {
 }
 
 export enum CommandContext {
+    ActiveHasRemote = 'gitlens:activeHasRemote',
+    ActiveIsBlameable = 'gitlens:activeIsBlameable',
+    ActiveFileIsTracked = 'gitlens:activeIsTracked',
     AnnotationStatus = 'gitlens:annotationStatus',
     CanToggleCodeLens = 'gitlens:canToggleCodeLens',
     Enabled = 'gitlens:enabled',
     GitExplorer = 'gitlens:gitExplorer',
     GitExplorerAutoRefresh = 'gitlens:gitExplorer:autoRefresh',
-    GitExplorerFilesLayout = 'gitlens:gitExplorer:files:layout',
+    // GitExplorerFilesLayout = 'gitlens:gitExplorer:files:layout',
     GitExplorerView = 'gitlens:gitExplorer:view',
     HasRemotes = 'gitlens:hasRemotes',
     HasRepository = 'gitlens:hasRepository',
-    ActiveHasRemote = 'gitlens:activeHasRemote',
-    ActiveIsBlameable = 'gitlens:activeIsBlameable',
-    ActiveFileIsTracked = 'gitlens:activeIsTracked',
-    Key = 'gitlens:key'
+    Key = 'gitlens:key',
+    ResultsExplorer = 'gitlens:resultsExplorer',
+    ResultsExplorerKeepResults = 'gitlens:resultsExplorer:keepResults'
 }
 
 export function setCommandContext(key: CommandContext | string, value: any) {
@@ -89,5 +91,6 @@ export enum GlobalState {
 
 export enum WorkspaceState {
     GitExplorerAutoRefresh = 'gitlens:gitExplorer:autoRefresh',
-    GitExplorerView = 'gitlens:gitExplorer:view'
+    GitExplorerView = 'gitlens:gitExplorer:view',
+    ResultsExplorerKeepResults = 'gitlens:resultsExplorer:keepResults'
 }

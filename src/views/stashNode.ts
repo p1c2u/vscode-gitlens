@@ -1,8 +1,7 @@
 'use strict';
 import { Iterables } from '../system';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
-import { ExplorerNode, ResourceType } from './explorerNode';
-import { GitExplorer } from './gitExplorer';
+import { Explorer, ExplorerNode, ResourceType } from './explorerNode';
 import { CommitFormatter, GitStashCommit, GitUri, ICommitFormatOptions } from '../gitService';
 import { StashFileNode } from './stashFileNode';
 
@@ -10,7 +9,7 @@ export class StashNode extends ExplorerNode {
 
     constructor(
         public readonly commit: GitStashCommit,
-        private readonly explorer: GitExplorer
+        private readonly explorer: Explorer
     ) {
         super(new GitUri(commit.uri, commit));
     }

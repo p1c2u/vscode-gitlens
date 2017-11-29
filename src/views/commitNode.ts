@@ -3,10 +3,9 @@ import { Arrays, Iterables } from '../system';
 import { Command, TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { Commands, DiffWithPreviousCommandArgs } from '../commands';
 import { CommitFileNode, CommitFileNodeDisplayAs } from './commitFileNode';
-import { GitExplorerFilesLayout } from '../configuration';
+import { ExplorerFilesLayout } from '../configuration';
 import { FolderNode, IFileExplorerNode } from './folderNode';
-import { ExplorerNode, ResourceType } from './explorerNode';
-import { GitExplorer } from './gitExplorer';
+import { Explorer, ExplorerNode, ResourceType } from './explorerNode';
 import { CommitFormatter, GitBranch, GitLogCommit, GitService, GitUri, ICommitFormatOptions } from '../gitService';
 import * as path from 'path';
 
@@ -16,7 +15,7 @@ export class CommitNode extends ExplorerNode {
 
     constructor(
         public readonly commit: GitLogCommit,
-        private readonly explorer: GitExplorer,
+        private readonly explorer: Explorer,
         public readonly branch?: GitBranch
     ) {
         super(new GitUri(commit.uri, commit));
@@ -36,7 +35,7 @@ export class CommitNode extends ExplorerNode {
             ...Iterables.map(commit.fileStatuses, s => new CommitFileNode(s, commit, this.explorer, CommitFileNodeDisplayAs.File, this.branch))
         ];
 
-        if (this.explorer.config.files.layout !== GitExplorerFilesLayout.List) {
+        if (this.explorer.config.files.layout !== ExplorerFilesLayout.List) {
             const hierarchy = Arrays.makeHierarchical(children, n => n.uri.getRelativePath().split('/'),
             (...paths: string[]) => GitService.normalizePath(path.join(...paths)), this.explorer.config.files.compact);
 

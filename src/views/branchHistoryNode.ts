@@ -3,18 +3,17 @@ import { Iterables } from '../system';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { CommitNode } from './commitNode';
 import { GlyphChars } from '../constants';
-import { ExplorerNode, MessageNode, ResourceType, ShowAllNode } from './explorerNode';
-import { GitExplorer } from './gitExplorer';
+import { Explorer, ExplorerNode, MessageNode, ResourceType, ShowAllNode } from './explorerNode';
 import { GitBranch, GitUri } from '../gitService';
 
 export class BranchHistoryNode extends ExplorerNode {
 
-        maxCount: number | undefined = undefined;
+    readonly supportsPaging: boolean = true;
 
-        constructor(
+    constructor(
             public readonly branch: GitBranch,
             uri: GitUri,
-            private readonly explorer: GitExplorer
+            private readonly explorer: Explorer
         ) {
             super(uri);
         }
@@ -25,7 +24,7 @@ export class BranchHistoryNode extends ExplorerNode {
 
             const children: (CommitNode | ShowAllNode)[] = [...Iterables.map(log.commits.values(), c => new CommitNode(c, this.explorer, this.branch))];
             if (log.truncated) {
-                children.push(new ShowAllNode('Show All Commits', this, this.explorer.context));
+                children.push(new ShowAllNode('Show All Commits', this, this.explorer));
             }
             return children;
         }

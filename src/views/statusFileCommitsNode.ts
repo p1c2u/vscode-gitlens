@@ -2,8 +2,7 @@
 import { Command, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
 import { Commands, DiffWithPreviousCommandArgs } from '../commands';
 import { CommitFileNode, CommitFileNodeDisplayAs } from './commitFileNode';
-import { ExplorerNode, ResourceType } from './explorerNode';
-import { GitExplorer } from './gitExplorer';
+import { Explorer, ExplorerNode, ResourceType } from './explorerNode';
 import { getGitStatusIcon, GitBranch, GitLogCommit, GitUri, IGitStatusFile, IGitStatusFileWithCommit, IStatusFormatOptions, StatusFileFormatter } from '../gitService';
 import * as path from 'path';
 
@@ -13,7 +12,7 @@ export class StatusFileCommitsNode extends ExplorerNode {
         public readonly repoPath: string,
         public readonly status: IGitStatusFile,
         public readonly commits: GitLogCommit[],
-        private readonly explorer: GitExplorer,
+        private readonly explorer: Explorer,
         public readonly branch?: GitBranch
     ) {
         super(new GitUri(Uri.file(path.resolve(repoPath, status.fileName)), { repoPath: repoPath, fileName: status.fileName, sha: 'HEAD' }));
