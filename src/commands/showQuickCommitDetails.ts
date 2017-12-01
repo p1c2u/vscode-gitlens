@@ -112,7 +112,7 @@ export class ShowQuickCommitDetailsCommand extends ActiveEditorCachedCommand {
                     label: `go back ${GlyphChars.ArrowBack}`,
                     description: `${Strings.pad(GlyphChars.Dash, 2, 3)} to branch history`
                 }, Commands.ShowQuickCurrentBranchHistory, [
-                        new GitUri(args.commit.uri, args.commit)
+                        args.commit.toGitUri()
                     ]);
             }
 
@@ -121,7 +121,7 @@ export class ShowQuickCommitDetailsCommand extends ActiveEditorCachedCommand {
                 label: `go back ${GlyphChars.ArrowBack}`,
                 description: `${Strings.pad(GlyphChars.Dash, 2, 3)} to details of ${GlyphChars.Space}$(git-commit) ${args.commit.shortSha}`
             }, Commands.ShowQuickCommitDetails, [
-                    new GitUri(args.commit.uri, args.commit),
+                    args.commit.toGitUri(),
                     args
                 ]);
 

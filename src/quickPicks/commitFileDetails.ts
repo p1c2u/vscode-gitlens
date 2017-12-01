@@ -32,11 +32,11 @@ export class OpenCommitFileRevisionCommandQuickPickItem extends OpenFileCommandQ
         let description: string;
         let uri: Uri;
         if (commit.status === 'D') {
-            uri = GitService.toGitContentUri(commit.previousSha!, commit.previousFileName!, commit.repoPath, undefined);
+            uri = GitUri.toRevisionUri(commit.previousFileSha, commit.previousUri.fsPath, commit.repoPath);
             description = `${Strings.pad(GlyphChars.Dash, 2, 3)} ${path.basename(commit.fileName)} in ${GlyphChars.Space}$(git-commit) ${commit.previousShortSha} (deleted in ${GlyphChars.Space}$(git-commit) ${commit.shortSha})`;
         }
         else {
-            uri = GitService.toGitContentUri(commit);
+            uri = GitUri.toRevisionUri(commit.sha, commit.uri.fsPath, commit.repoPath);
             description = `${Strings.pad(GlyphChars.Dash, 2, 3)} ${path.basename(commit.fileName)} in ${GlyphChars.Space}$(git-commit) ${commit.shortSha}`;
         }
         super(uri, item || {
@@ -69,7 +69,7 @@ export class CommitFileDetailsQuickPick {
                 label: `$(git-commit) Show Commit Details`,
                 description: `${Strings.pad(GlyphChars.Dash, 2, 3)} $(git-commit) ${commit.shortSha}`
             }, Commands.ShowQuickCommitDetails, [
-                    new GitUri(commit.uri, commit),
+                    commit.toGitUri(),
                     {
                         commit,
                         sha: commit.sha,
@@ -167,7 +167,7 @@ export class CommitFileDetailsQuickPick {
                 label: `$(history) Show ${commit.workingFileName ? 'Previous ' : ''}File History`,
                 description: `${Strings.pad(GlyphChars.Dash, 2, 3)} of ${path.basename(commit.fileName)} ${Strings.pad(GlyphChars.Dot, 1, 1)} from ${GlyphChars.Space}$(git-commit) ${commit.shortSha}`
             }, Commands.ShowQuickFileHistory, [
-                    new GitUri(commit.uri, commit),
+                    commit.toGitUri(),
                     {
                         goBackCommand: currentCommand
                     } as ShowQuickFileHistoryCommandArgs

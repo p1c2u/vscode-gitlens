@@ -1,6 +1,6 @@
 'use strict';
 import { Iterables, Strings } from '../system';
-import { commands, QuickPickOptions, TextDocumentShowOptions, Uri, window } from 'vscode';
+import { commands, QuickPickOptions, TextDocumentShowOptions, window } from 'vscode';
 import { Commands, DiffWithWorkingCommandArgs, OpenChangedFilesCommandArgs, ShowQuickBranchHistoryCommandArgs, ShowQuickRepoStatusCommandArgs, ShowQuickStashListCommandArgs } from '../commands';
 import { CommandQuickPickItem, getQuickPickIgnoreFocusOut, OpenFileCommandQuickPickItem, QuickPickItem } from './common';
 import { GlyphChars } from '../constants';
@@ -216,7 +216,7 @@ export class RepoStatusQuickPick {
             label: `$(inbox) Show Stashed Changes`,
             description: `${Strings.pad(GlyphChars.Dash, 2, 3)} shows stashed changes in the repository`
         }, Commands.ShowQuickStashList, [
-                new GitUri(Uri.file(status.repoPath), { fileName: '', repoPath: status.repoPath }),
+                GitUri.fromRepoPath(status.repoPath),
                 {
                     goBackCommand: currentCommand
                 } as ShowQuickStashListCommandArgs
@@ -227,7 +227,7 @@ export class RepoStatusQuickPick {
                 label: `$(cloud-upload)${GlyphChars.Space} ${status.state.ahead} Commit${status.state.ahead > 1 ? 's' : ''} ahead of ${GlyphChars.Space}$(git-branch) ${status.upstream}`,
                 description: `${Strings.pad(GlyphChars.Dash, 2, 3)} shows commits in ${GlyphChars.Space}$(git-branch) ${status.branch} but not ${GlyphChars.Space}$(git-branch) ${status.upstream}`
             }, Commands.ShowQuickBranchHistory, [
-                    new GitUri(Uri.file(status.repoPath), { fileName: '', repoPath: status.repoPath, sha: `${status.upstream}..${status.branch}` }),
+                    GitUri.fromRepoPath(status.repoPath, `${status.upstream}..${status.branch}`),
                     {
                         branch: status.branch,
                         maxCount: 0,
@@ -241,7 +241,7 @@ export class RepoStatusQuickPick {
                 label: `$(cloud-download)${GlyphChars.Space} ${status.state.behind} Commit${status.state.behind > 1 ? 's' : ''} behind ${GlyphChars.Space}$(git-branch) ${status.upstream}`,
                 description: `${Strings.pad(GlyphChars.Dash, 2, 3)} shows commits in ${GlyphChars.Space}$(git-branch) ${status.upstream} but not ${GlyphChars.Space}$(git-branch) ${status.branch}${status.sha ? ` (since ${GlyphChars.Space}$(git-commit) ${GitService.shortenSha(status.sha)})` : ''}`
             }, Commands.ShowQuickBranchHistory, [
-                    new GitUri(Uri.file(status.repoPath), { fileName: '', repoPath: status.repoPath, sha: `${status.branch}..${status.upstream}` }),
+                    GitUri.fromRepoPath(status.repoPath, `${status.branch}..${status.upstream}`),
                     {
                         branch: status.upstream,
                         maxCount: 0,

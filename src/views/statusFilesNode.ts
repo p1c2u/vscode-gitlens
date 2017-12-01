@@ -1,6 +1,6 @@
 'use strict';
 import { Arrays, Iterables, Objects } from '../system';
-import { TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
+import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { GitExplorerFilesLayout } from '../configuration';
 import { ExplorerNode, ResourceType, ShowAllNode } from './explorerNode';
 import { FolderNode, IFileExplorerNode } from './folderNode';
@@ -21,7 +21,7 @@ export class StatusFilesNode extends ExplorerNode {
         private readonly explorer: GitExplorer,
         public readonly branch?: GitBranch
     ) {
-        super(new GitUri(Uri.file(status.repoPath), { repoPath: status.repoPath, fileName: status.repoPath }));
+        super(GitUri.fromRepoPath(status.repoPath));
         this.repoPath = status.repoPath;
     }
 
@@ -52,11 +52,11 @@ export class StatusFilesNode extends ExplorerNode {
                     return [
                         {
                             ...s,
-                            commit: new GitLogCommit(GitCommitType.File, repoPath, GitService.uncommittedSha, s.fileName, 'You', new Date(), '', s.status, [s], s.originalFileName, GitService.stagedUncommittedSha, s.fileName)
+                            commit: new GitLogCommit(GitCommitType.File, repoPath, GitService.uncommittedSha, 'You', new Date(), '', s.fileName, [s], s.status, s.originalFileName, GitService.stagedUncommittedSha, s.fileName)
                         } as IGitStatusFileWithCommit,
                         {
                             ...s,
-                            commit: new GitLogCommit(GitCommitType.File, repoPath, GitService.stagedUncommittedSha, s.fileName, 'You', older, '', s.status, [s], s.originalFileName, 'HEAD', s.fileName)
+                            commit: new GitLogCommit(GitCommitType.File, repoPath, GitService.stagedUncommittedSha, 'You', older, '', s.fileName, [s], s.status, s.originalFileName, 'HEAD', s.fileName)
                         } as IGitStatusFileWithCommit
                     ];
                 }
@@ -64,7 +64,7 @@ export class StatusFilesNode extends ExplorerNode {
                     return [
                         {
                             ...s,
-                            commit: new GitLogCommit(GitCommitType.File, repoPath, GitService.stagedUncommittedSha, s.fileName, 'You', new Date(), '', s.status, [s], s.originalFileName, 'HEAD', s.fileName)
+                            commit: new GitLogCommit(GitCommitType.File, repoPath, GitService.stagedUncommittedSha, 'You', new Date(), '', s.fileName, [s], s.status, s.originalFileName, 'HEAD', s.fileName)
                         } as IGitStatusFileWithCommit
                     ];
                 }
@@ -72,7 +72,7 @@ export class StatusFilesNode extends ExplorerNode {
                     return [
                         {
                             ...s,
-                            commit: new GitLogCommit(GitCommitType.File, repoPath, GitService.uncommittedSha, s.fileName, 'You', new Date(), '', s.status, [s], s.originalFileName, 'HEAD', s.fileName)
+                            commit: new GitLogCommit(GitCommitType.File, repoPath, GitService.uncommittedSha, 'You', new Date(), '', s.fileName, [s], s.status, s.originalFileName, 'HEAD', s.fileName)
                         } as IGitStatusFileWithCommit
                     ];
                 }

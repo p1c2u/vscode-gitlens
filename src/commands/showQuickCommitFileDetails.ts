@@ -114,7 +114,7 @@ export class ShowQuickCommitFileDetailsCommand extends ActiveEditorCachedCommand
                     label: `go back ${GlyphChars.ArrowBack}`,
                     description: `${Strings.pad(GlyphChars.Dash, 2, 3)} to details of ${GlyphChars.Space}$(git-commit) ${shortSha}`
                 }, Commands.ShowQuickCommitDetails, [
-                        new GitUri(args.commit.uri, args.commit),
+                        args.commit.toGitUri(),
                         {
                             commit: args.commit,
                             sha: args.sha
@@ -127,7 +127,7 @@ export class ShowQuickCommitFileDetailsCommand extends ActiveEditorCachedCommand
                 label: `go back ${GlyphChars.ArrowBack}`,
                 description: `${Strings.pad(GlyphChars.Dash, 2, 3)} to details of ${GlyphChars.Space}$(file-text) ${path.basename(args.commit.fileName)} in ${GlyphChars.Space}$(git-commit) ${shortSha}`
             }, Commands.ShowQuickCommitFileDetails, [
-                    new GitUri(args.commit.uri, args.commit),
+                    args.commit.toGitUri(),
                     args
                 ]);
 

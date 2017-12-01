@@ -26,36 +26,43 @@ export enum GitCommitType {
     Stash = 'stash'
 }
 
-export class GitCommit {
+export abstract class GitCommit {
 
-    type: GitCommitType;
-    originalFileName?: string;
-    previousSha?: string;
-    previousFileName?: string;
+    readonly type: GitCommitType;
+    readonly originalFileName: string | undefined;
+    previousSha: string | undefined;
+    previousFileName: string | undefined;
     workingFileName?: string;
 
+    protected readonly _fileName: string;
     private _isStagedUncommitted: boolean | undefined;
     private _isUncommitted: boolean | undefined;
     private _shortSha: string | undefined;
 
     constructor(
         type: GitCommitType,
-        public repoPath: string,
-        public sha: string,
-        public fileName: string,
-        public author: string,
-        public date: Date,
-        public message: string,
+        public readonly repoPath: string,
+        public readonly sha: string,
+        public readonly author: string,
+        public readonly date: Date,
+        public readonly message: string,
+        fileName: string,
         originalFileName?: string,
         previousSha?: string,
         previousFileName?: string
     ) {
         this.type = type;
-        this.fileName = this.fileName && this.fileName.replace(/, ?$/, '');
-
+        this._fileName = fileName || '';
         this.originalFileName = originalFileName;
         this.previousSha = previousSha;
         this.previousFileName = previousFileName;
+    }
+
+    get fileName() {
+        // If we aren't a single-file commit, return an empty file name (makes it default to the repoPath)
+        return (this.type === GitCommitType.Blame || this.type === GitCommitType.File)
+            ? this._fileName
+            : '';
     }
 
     get shortSha() {
@@ -79,16 +86,22 @@ export class GitCommit {
         return this._isUncommitted;
     }
 
+    abstract get previousFileSha(): string;
+
+    get previousFileShortSha(): string {
+        return Git.shortenSha(this.previousFileSha);
+    }
+
     get previousShortSha() {
         return this.previousSha && Git.shortenSha(this.previousSha);
     }
 
     get previousUri(): Uri {
-        return this.previousFileName ? Uri.file(path.resolve(this.repoPath, this.previousFileName)) : this.uri;
+        return this.previousFileName ? Uri.file(path.resolve(this.repoPath, this.previousFileName || this.originalFileName)) : this.uri;
     }
 
     get uri(): Uri {
-        return Uri.file(path.resolve(this.repoPath, this.originalFileName || this.fileName || ''));
+        return Uri.file(path.resolve(this.repoPath, this.fileName));
     }
 
     private _dateFormatter?: Dates.IDateFormatter;
@@ -111,18 +124,11 @@ export class GitCommit {
         return GitUri.getFormattedPath(this.fileName, separator);
     }
 
-    with(changes: { type?: GitCommitType, sha?: string, fileName?: string, originalFileName?: string | null, previousFileName?: string | null, previousSha?: string | null }): GitCommit {
-        return new GitCommit(changes.type || this.type,
-            this.repoPath,
-            changes.sha || this.sha,
-            changes.fileName || this.fileName,
-            this.author,
-            this.date,
-            this.message,
-            this.getChangedValue(changes.originalFileName, this.originalFileName),
-            this.getChangedValue(changes.previousSha, this.previousSha),
-            this.getChangedValue(changes.previousFileName, this.previousFileName));
+    toGitUri(previous: boolean = false): GitUri {
+        return GitUri.fromCommit(this, previous);
     }
+
+    abstract with(changes: { type?: GitCommitType, sha?: string, fileName?: string, originalFileName?: string | null, previousFileName?: string | null, previousSha?: string | null }): GitCommit;
 
     protected getChangedValue<T>(change: T | null | undefined, original: T | undefined): T | undefined {
         if (change === undefined) return original;

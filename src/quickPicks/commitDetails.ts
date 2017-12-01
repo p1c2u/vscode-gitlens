@@ -4,7 +4,7 @@ import { commands, QuickPickOptions, TextDocumentShowOptions, Uri, window } from
 import { Commands, CopyMessageToClipboardCommandArgs, CopyShaToClipboardCommandArgs, DiffDirectoryCommandCommandArgs, DiffWithPreviousCommandArgs, ShowQuickCommitDetailsCommandArgs, StashApplyCommandArgs, StashDeleteCommandArgs } from '../commands';
 import { CommandQuickPickItem, getQuickPickIgnoreFocusOut, KeyCommandQuickPickItem, OpenFileCommandQuickPickItem, OpenFilesCommandQuickPickItem, QuickPickItem } from './common';
 import { GlyphChars } from '../constants';
-import { getGitStatusOcticon, GitCommit, GitCommitType, GitLog, GitLogCommit, GitService, GitStashCommit, GitStatusFile, GitStatusFileStatus, GitUri, IGitCommitInfo, IGitStatusFile, RemoteResource } from '../gitService';
+import { getGitStatusOcticon, GitCommit, GitCommitType, GitLog, GitLogCommit, GitService, GitStashCommit, GitStatusFile, GitStatusFileStatus, GitUri, IGitStatusFile, RemoteResource } from '../gitService';
 import { Keyboard, KeyCommand, KeyNoopCommand, Keys } from '../keyboard';
 import { OpenRemotesCommandQuickPickItem } from './remotes';
 import * as path from 'path';
@@ -25,29 +25,16 @@ export class CommitWithFileStatusQuickPickItem extends OpenFileCommandQuickPickI
         const octicon = getGitStatusOcticon(status.status);
         const description = GitStatusFile.getFormattedDirectory(status, true);
 
-        let sha;
-        if (status.status === 'D') {
-            sha = commit.previousSha!;
-        }
-        else {
-            sha = commit.sha;
-        }
-
-        super(GitService.toGitContentUri(sha, status.fileName, commit.repoPath, status.originalFileName), {
+        super(GitUri.toRevisionUri(commit.sha, status, commit.repoPath), {
             label: `${Strings.pad(octicon, 4, 2)} ${path.basename(status.fileName)}`,
             description: description
         });
 
         this.commit = commit;
         this.fileName = status.fileName;
-        this.gitUri = GitUri.fromFileStatus(status, {
-            fileName: status.fileName,
-            repoPath: commit.repoPath,
-            sha: commit.sha,
-            originalFileName: status.originalFileName
-        } as IGitCommitInfo);
-        this.sha = sha;
-        this.shortSha = GitService.shortenSha(sha)!;
+        this.gitUri = GitUri.fromFileStatus(status, commit.repoPath, commit.sha, true);
+        this.sha = commit.sha;
+        this.shortSha = commit.shortSha;
         this.status = status.status;
     }
 
@@ -75,7 +62,7 @@ export class OpenCommitFilesCommandQuickPickItem extends OpenFilesCommandQuickPi
     ) {
         const repoPath = commit.repoPath;
         const uris = Arrays.filterMap(commit.fileStatuses,
-            f => f.status !== 'D' ? GitUri.fromFileStatus(f, repoPath) : undefined);
+            f => GitUri.fromFileStatus(f, repoPath));
 
         super(uris, item || {
             label: `$(file-symlink-file) Open Changed Files`,
@@ -92,7 +79,7 @@ export class OpenCommitFileRevisionsCommandQuickPickItem extends OpenFilesComman
         item?: QuickPickItem
     ) {
         const uris = Arrays.filterMap(commit.fileStatuses,
-            f => f.status !== 'D' ? GitService.toGitContentUri(commit.sha, f.fileName, commit.repoPath, f.originalFileName) : undefined);
+            f => GitUri.toRevisionUri(f.status === 'D' ? commit.previousFileSha : commit.sha, f, commit.repoPath));
 
         super(uris, item || {
             label: `$(file-symlink-file) Open Changed Revisions`,
@@ -168,13 +155,18 @@ export class CommitDetailsQuickPick {
                 } as RemoteResource, currentCommand));
             }
 
+            let previousFileSha = commit.previousFileSha;
+            if (GitService.isResolveRequired(previousFileSha)) {
+                previousFileSha = await git.resolveReference(commit.repoPath, previousFileSha);
+            }
+
             items.splice(index++, 0, new CommandQuickPickItem({
                 label: `$(git-compare) Compare Directory with Previous Commit`,
-                description: `${Strings.pad(GlyphChars.Dash, 2, 3)} $(git-commit) ${commit.previousShortSha || `${commit.shortSha}^`} ${GlyphChars.Space} $(git-compare) ${GlyphChars.Space} $(git-commit) ${commit.shortSha}`
+                description: `${Strings.pad(GlyphChars.Dash, 2, 3)} $(git-commit) ${GitService.shortenSha(previousFileSha)} ${GlyphChars.Space} $(git-compare) ${GlyphChars.Space} $(git-commit) ${commit.shortSha}`
             }, Commands.DiffDirectory, [
                     commit.uri,
                     {
-                        shaOrBranch1: commit.previousSha || `${commit.sha}^`,
+                        shaOrBranch1: previousFileSha,
                         shaOrBranch2: commit.sha
                     } as DiffDirectoryCommandCommandArgs
                 ]));

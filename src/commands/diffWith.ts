@@ -2,7 +2,7 @@
 import { commands, Range, TextDocumentShowOptions, TextEditor, Uri, window } from 'vscode';
 import { ActiveEditorCommand, Commands } from './common';
 import { BuiltInCommands, GlyphChars } from '../constants';
-import { GitCommit, GitService } from '../gitService';
+import { GitCommit, GitService, GitUri } from '../gitService';
 import { Logger } from '../logger';
 import * as path from 'path';
 
@@ -90,6 +90,15 @@ export class DiffWithCommand extends ActiveEditorCommand {
         if (args.repoPath === undefined || args.lhs === undefined || args.rhs === undefined) return undefined;
 
         try {
+            // If the shas aren't resolved (e.g. a2d24f^), resolve them
+            if (GitService.isResolveRequired(args.lhs.sha)) {
+                args.lhs.sha = await this.git.resolveReference(args.repoPath, args.lhs.sha, args.lhs.uri);
+            }
+
+            if (GitService.isResolveRequired(args.rhs.sha)) {
+                args.rhs.sha = await this.git.resolveReference(args.repoPath, args.rhs.sha, args.rhs.uri);
+            }
+
             const [lhs, rhs] = await Promise.all([
                 this.git.getVersionedFile(args.repoPath, args.lhs.uri.fsPath, args.lhs.sha),
                 this.git.getVersionedFile(args.repoPath, args.rhs.uri.fsPath, args.rhs.sha)
@@ -125,10 +134,10 @@ export class DiffWithCommand extends ActiveEditorCommand {
 
             return await commands.executeCommand(BuiltInCommands.Diff,
                 lhs === undefined
-                    ? GitService.toGitContentUri(GitService.deletedSha, args.lhs.uri.fsPath, args.repoPath)
+                    ? GitUri.toRevisionUri(GitService.deletedSha, args.lhs.uri.fsPath, args.repoPath)
                     : Uri.file(lhs),
                 rhs === undefined
-                    ? GitService.toGitContentUri(GitService.deletedSha, args.rhs.uri.fsPath, args.repoPath)
+                    ? GitUri.toRevisionUri(GitService.deletedSha, args.rhs.uri.fsPath, args.repoPath)
                     : Uri.file(rhs),
                 title,
                 args.showOptions);
